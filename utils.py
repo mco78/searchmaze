@@ -18,3 +18,4 @@ def array_addition(arr1, arr2):
     b = np.array(arr2)
     result = a + b
     return [result[0], result[1]]
+

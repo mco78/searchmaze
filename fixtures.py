@@ -8,11 +8,14 @@ Created on Fri Mar  2 13:19:18 2018
 #LIBS
 import numpy as np
 
-"""Global Game Variables
+"""
+Global Game Variables
 """
 GAME_SPEED = 0.5 # seconds between rounds
 MAX_ROUNDS = 10 # max rounds until game interrups 
 GUI_STYLE = "text" # options "text", ...
+AGENT_TYPE = "default" # otions: "default", "random", ...
+
 
 """
 MAZE
