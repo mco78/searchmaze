@@ -13,8 +13,11 @@ Global Game Variables
 """
 GAME_SPEED = 0.5 # seconds between rounds
 MAX_ROUNDS = 10 # max rounds until game interrups 
-GUI_STYLE = "text" # options "text", ...
-AGENT_TYPE = "default" # otions: "default", "random", ...
+GUI_STYLE = "text" # options "text", "tk"
+AGENT_TYPE = "random" # otions: "default", "random", ...
+
+"""GUI Variables"""
+TILE_SIZE = 50
 
 
 """

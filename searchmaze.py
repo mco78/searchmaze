@@ -17,7 +17,7 @@ import time
 #CUSTOM
 from fixtures import *
 from agents import *
-import utils
+#import utils
 import gui
 
 class Tile(object):
@@ -90,18 +90,37 @@ class Game(object):
         else:   
             return False
    
+def game_state_to_int(game):
+    """function to transfer game state to 2D-List with INTs indicating objects
+    on the board, which is given to gui"""
+    result = []
+    for row in game.state:
+        line = []
+        for cell in row:
+            if isinstance(cell, Tile):
+                if isinstance(cell, Goal):
+                    line.append(2)
+                elif cell.wall == False:
+                    line.append(0)
+                else:
+                    line.append(1)
+            else:
+                line.append(9) # 9 means, Tile not detected.
+        result.append(line)
+    result[game.agent.x][game.agent.y] = 3
+    return result
 
 def main():
     """main() function for starting the game"""
     
     game = Game(MAZE)
     running = True
-    gui.show(game, Tile, Goal)
+    gui.show(game_state_to_int(game), game.round)
     
     while running and game.round < MAX_ROUNDS:
         game.round += 1
         running = game.update_state()
-        gui.show(game, Tile, Goal)
+        gui.show(game_state_to_int(game), game.round)
         time.sleep(GAME_SPEED)
     print("Game finished in Round {}!".format(game.round))        
 
