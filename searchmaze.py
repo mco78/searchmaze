@@ -6,13 +6,16 @@ Created on Wed Feb 28 17:45:57 2018
 @author: Marc Otten
 """
 """
-NEXT UP:
-    - create a tk-gui -> see tests at \python_projects\tkinter\tkinter_test2.py
-    - Define new versions of agents (manual, search algorithm etc.)
+STATE OF THE PROJECT (July 11 2018):
+I cant figure out how to seperate the game logic from the gui. Also, I am not 
+able to update the gui properly. With the text gui (set Text-gui in Fixtures)
+the simple agents seem to work. Will abandon the project now to learn more 
+about guis and their correspondencies with other game components.
 """
 
 #LIBS
 import time
+from tkinter import *
 
 #CUSTOM
 from fixtures import *
@@ -115,15 +118,26 @@ def main():
     
     game = Game(MAZE)
     running = True
-    gui.show(game_state_to_int(game), game.round)
+    
+    #initialize GUI
+    root = Tk()
+    root.title("Searchmaze GUI")
+    root.resizable(False,False)
+    canvas = Canvas(root, width = MAZE_WIDTH * TILE_SIZE, height = MAZE_HEIGHT * TILE_SIZE)
+    canvas.pack()
+    
+    game_gui = gui.create_gui(game_state_to_int(game), canvas)
+    
     
     while running and game.round < MAX_ROUNDS:
         game.round += 1
         running = game.update_state()
-        gui.show(game_state_to_int(game), game.round)
+        player_gui_tile = canvas.find_withtag("player")
+        player_gui_tile.move_tile(CURRENT_ACTION)
         time.sleep(GAME_SPEED)
     print("Game finished in Round {}!".format(game.round))        
-
+    root.mainloop()
+    
 if __name__ == '__main__':
     main()
     

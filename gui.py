@@ -4,103 +4,58 @@ GUI for searchmaze.py
 Created on Mon Mar  5 16:46:41 2018
 
 @author: Marc Otten
+
+
 """
 import numpy as np
-import tkinter as tk
+
 
 from fixtures import GUI_STYLE
 from fixtures import MAZE_WIDTH
 from fixtures import MAZE_HEIGHT
 from fixtures import TILE_SIZE
 
-"""First try will be a textbased GUI with a very low framerate, so one can
-read everything in the console. The object is to design everything so that 
-the textbased GUI can be replaced with another later"""
-
-def show(state, game_round):
-    
+class guiTile(object):
+    def __init__(self, canvas, x1, y1, x2, y2, color):
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.color = color
+        self.canvas = canvas
+        self.tile = canvas.create_rectangle(self.x1, self.y1, self.x2, self.y2, fill=self.color)
+        if self.color == "red":
+            canvas.itemconfig(self.tile, tags="player")
+            
         
-    
-    """Desides which gui to use and calls gui show function. Takes game state in 
-    2D list of ints is passes it to specified gui"""
-    if GUI_STYLE == "text":
-        text_show(state, game_round)
-    if GUI_STYLE == "tk":
-        if game_round == 0:
-            tk_init(state) #HIER WEITERMACHEN: GUI INITIAILIEREN UND DANN UPDATEN
-        else:
-            tk_update(state, game_round)
 
-
-def text_show(state, game_round):
-    """Text based version of show(). Needs Tile and Goal Class to compare 
-    objects."""
-    print("_______________")
-    print("Round {}".format(game_round))
-    
-    output_strings = []
+    def move_tile(self, action):
+        x, y = DIRECTIONS[action]
+        deltax = x * TILE_SIZE
+        deltay = y * TILE_SIZE
+        self.canvas.move(self.tile, deltax, deltay)
+        self.canvas.after(500, self.move_tile) #was soll diese Zeile?? Aus TKinter_test4.py übernommen
+        
+def create_gui(state, canvas):
+    tiles = []
+    x = -1
     for row in state:
-        row_string = []
+        x += 1
+        y = -1
         for cell in row:
-            if cell == 0:
-                row_string.append("_")
-            elif cell == 1:
-                row_string.append("X")
+            y += 1
+            if cell == 1:
+                color = "#476042"
             elif cell == 2:
-                row_string.append("O")
+                color = "yellow"
             elif cell == 3:
-                row_string.append("A")
-            else:
-                row_string.append("F") # 'F' means, Tile not detected.
-        output_strings.append(row_string)
-    
-    #rotate for display reasons
-    output = np.array(output_strings).transpose().tolist()   
-    for row in output:
-        print("".join(row))
-
-def tk_init(state, game_round):
-    """displays game state using tkinter gui"""
-        
-    def checkered(canvas, line_distance):
-       """create grid fitting in canvas"""
-       # vertical lines at an interval of "line_distance" pixel
-       for x in range(line_distance,canvas_width,line_distance):
-          canvas.create_line(x, 0, x, canvas_height, fill="#476042")
-       # horizontal lines at an interval of "line_distance" pixel
-       for y in range(line_distance,canvas_height,line_distance):
-          canvas.create_line(0, y, canvas_width, y, fill="#476042")
-    
-    def display_objects():
-        color = ""
-        for y in range(MAZE_HEIGHT):
-            for x in range(MAZE_WIDTH):
-                if state[x][y] == 1:
-                    color = "#476042"
-                elif state[x][y] == 2:
-                    color = "yellow"
-                elif state[x][y] == 3:
-                    color = "red"
-                else:
-                    color = "grey"
-                w.create_rectangle(TILE_SIZE*x, TILE_SIZE*y, 
-                               TILE_SIZE*(x+1), TILE_SIZE*(y+1), fill=color) 
-    
-    
-    master = tk.Tk()
-    canvas_width = MAZE_WIDTH * TILE_SIZE
-    canvas_height = MAZE_HEIGHT * TILE_SIZE 
-    w = tk.Canvas(master, 
-               width=canvas_width,
-               height=canvas_height)
-    w.pack()
-    
-    checkered(w,TILE_SIZE)
-    display_objects()
-    
-    tk.mainloop()
-    """Does work in displaying one state. How to update state and redraw canvas? 
-    mainloop has to go to searchmaze? Further investigations with tkinter 
-    needed. start here: 
-        https://stackoverflow.com/questions/25430786/moving-balls-in-tkinter-canvas/25431690#25431690
-    """
+                color = "grey"
+                player_x = x
+                player_y = y
+            elif cell == 0:
+                color = "grey"
+            tiles.append(guiTile(canvas, TILE_SIZE*x, TILE_SIZE*y, TILE_SIZE*(x+1), TILE_SIZE*(y+1), color))
+    player = guiTile(canvas, TILE_SIZE*player_x, TILE_SIZE*player_y, TILE_SIZE*(player_x+1), TILE_SIZE*(player_y+1), "red")
+    tiles.append(player)
+    canvas.tag_raise("player")
+    return tiles

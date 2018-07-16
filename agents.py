@@ -46,6 +46,7 @@ class Agent(object):
         This agent version simply goes east."""
         
         action = "e"
+        CURRENT_ACTION = action
         print("action: {}".format(action))
         self.move(state, action)
         
@@ -63,6 +64,7 @@ class RandomAgent(Agent):
     def act(self, state):
         actions = ["e", "s", "w", "n"]
         action = actions[random.randint(0,3)]
+        CURRENT_ACTION = action
         print("action: {}".format(action))
         self.move(state, action)
         

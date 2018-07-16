@@ -15,6 +15,7 @@ GAME_SPEED = 0.5 # seconds between rounds
 MAX_ROUNDS = 10 # max rounds until game interrups 
 GUI_STYLE = "text" # options "text", "tk"
 AGENT_TYPE = "random" # otions: "default", "random", ...
+CURRENT_ACTION = ""
 
 """GUI Variables"""
 TILE_SIZE = 50
