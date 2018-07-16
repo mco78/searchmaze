@@ -8,6 +8,10 @@ Created on Fri Mar  2 13:17:10 2018
 #LIBS
 import numpy as np
 
+#CUSTOM
+import gui
+from fixtures import GUI_STYLE
+
 def array_addition(arr1, arr2):
     """element wise addition of two arrays ONLY with length 2"""
     a = np.array(arr1)

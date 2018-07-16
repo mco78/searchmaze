@@ -1,27 +1,59 @@
 # -*- coding: utf-8 -*-
 """
 SearchMaze - a maze game for testing AI
-Created on Wed Feb 28 17:45:57 2018
+Created on Mon Jul 16 11:08:36 2018
 
 @author: Marc Otten
-"""
-"""
-STATE OF THE PROJECT (July 11 2018):
-I cant figure out how to seperate the game logic from the gui. Also, I am not 
-able to update the gui properly. With the text gui (set Text-gui in Fixtures)
-the simple agents seem to work. Will abandon the project now to learn more 
-about guis and their correspondencies with other game components.
+
+CURRENT TODOS see #TODO statements. Next: MazeGame.update function
 """
 
-#LIBS
-import time
-from tkinter import *
+# IMPORTS
+from tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM
+import numpy as np
+import utils
+from random import randint
 
-#CUSTOM
-from fixtures import *
-from agents import *
-#import utils
-import gui
+
+# GLOBALS
+
+GAME_SPEED = 0.5 # seconds between rounds
+MAX_ROUNDS = 10 # max rounds until game interrups 
+TILE_SIZE = 50
+
+"""
+MAZE
+holds the structure for the world:
+    0=empty
+    1=wall
+    2=goal
+    3=agent
+For better human reading, MAZE_GRID is created in y,x-format and 
+then transposed, so that MAZE[x][y] can be accessed properly
+"""
+MAZE_GRID = [[0,0,0,0,0,2],
+             [0,0,1,0,0,0],
+             [0,0,1,1,1,0],
+             [3,0,0,0,1,0],
+             [0,1,0,0,0,0]]
+
+MAZE = np.array(MAZE_GRID).transpose().tolist()
+MAZE_WIDTH = len(MAZE)
+MAZE_HEIGHT = len(MAZE[1])
+
+
+DIRECTIONS = {"n": [0, -1],
+              "e": [1, 0],
+              "s": [0, 1],
+              "w": [-1, 0]}
+
+# ERROR HANDLING
+
+class SearchmazeError(Exception):
+    """An application specific error."""
+    pass
+
+# MAIN CODE
 
 class Tile(object):
     """Represents a tile in the world"""
@@ -45,13 +77,35 @@ class Goal(Tile):
         self.x = x
         self.y = y
 
-
-class Game(object):
-    """Class to create and update the game state."""
+class Agent(object):
+    """Represents the agent that has to escape the maze"""
     
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+
+    def act(self, board):
+        """Function to make decisions and then move.
+        This agent version simply goes east."""
+        
+        action = "e"
+        print("action: {}".format(action))
+        move = DIRECTIONS[action]
+        return move
+        
+
+
+
+
+
+class MazeBoard(object):
+    """Maze Board to hold the structure of the board"""
     def __init__(self, maze):
-        self.round = 0
-        self.state = []
+        self.state = self.__create_board(maze)
+    
+    def __create_board(maze):
+        board = []
         x = -1
         for row in maze:
             x += 1
@@ -66,78 +120,111 @@ class Game(object):
                 elif cell == 2:
                     line.append(Goal(x, y))
                 elif cell == 3:
+                    # create normal tile on which the agent object will sit
                     line.append(Tile(x, y, False))
-                    self.agent = choose_agent(x,y) #OLD: Agent(x,y)
                 else:
-                    print("wrong Tile type.")
-            self.state.append(line)  
-        
-    def get_object_at_position(self, x, y):
+                    raise SearchmazeError(
+                            "Wrong tile type!"
+                            )
+            board.append(line)
+        return board
+    
+    def __get_object_at_position(self, x, y):
         return self.state[x][y]
     
-    def set_object_at_position(self, obj, x, y):
+    def __set_object_at_position(self, obj, x, y):
         self.state[x][y] = obj
     
-    def update_state(self):
-        self.agent.act(self.state)
-        if self.check_winning_conditions():
-            
-            return False
-        else:
-            return True
-    
-    def check_winning_conditions(self):
-        obj_with_agent = self.get_object_at_position(self.agent.x, self.agent.y)
-        if isinstance(obj_with_agent, Goal):
-            return True
-        else:   
-            return False
-   
-def game_state_to_int(game):
-    """function to transfer game state to 2D-List with INTs indicating objects
-    on the board, which is given to gui"""
-    result = []
-    for row in game.state:
-        line = []
-        for cell in row:
-            if isinstance(cell, Tile):
-                if isinstance(cell, Goal):
-                    line.append(2)
-                elif cell.wall == False:
-                    line.append(0)
-                else:
-                    line.append(1)
-            else:
-                line.append(9) # 9 means, Tile not detected.
-        result.append(line)
-    result[game.agent.x][game.agent.y] = 3
-    return result
 
-def main():
-    """main() function for starting the game"""
+class MazeGame(object):
+    """ The Seachmaze game, in charge of coordinating the actions of the agent
+    and to check the winning conditions
+    """
+    def __init__(self, MAZE):
+        self.board = MazeBoard(MAZE)
+        agent_x, agent_y = self.__get_agent_position(MAZE)
+        self.agent = Agent(agent_x, agent_y)
     
-    game = Game(MAZE)
-    running = True
+    def start(self):
+        self.game_over = False
+        
+    def update(self):
+        agent_move = self.agent.act(self.board)
+        #TODO: update board object
+            #if move is on board
+                #if move is possible
+                    #update objects in board
+                    #update agent.x agent.y
+                #else
+                    #print message not valid
+            #update UI
+        
+        self.game_over = self.check_win()
+        
+    def check_win(self):
+        #TODO for now just return False
+        return False
     
-    #initialize GUI
-    root = Tk()
-    root.title("Searchmaze GUI")
-    root.resizable(False,False)
-    canvas = Canvas(root, width = MAZE_WIDTH * TILE_SIZE, height = MAZE_HEIGHT * TILE_SIZE)
-    canvas.pack()
+    def __get_agent_position(maze):
+        x = -1
+        for row in maze:
+            x += 1
+            y = -1
+            for cell in row:
+                y += 1
+                if cell == 3:
+                    return x, y
     
-    game_gui = gui.create_gui(game_state_to_int(game), canvas)
+        
+class MazeUI(Frame):
+    """
+    The Tkinter UI, responsible for drawing the maze
+    """
+    def __init__(self, parent, game):
+        self.game = game
+        self.parent = parent
+        Frame.__init__(self, parent)
+                
+        self.__initUI()
     
+    def __initUI(self):
+        self.parent.title("Seachmaze")
+        self.pack(fill=BOTH, expand=1)
+        self.canvas = Canvas(self,
+                             width = MAZE_WIDTH * TILE_SIZE,
+                             height = MAZE_HEIGHT * TILE_SIZE)
+        
+        self.canvas.pack(fill=BOTH, side=TOP)
+        
+        self.__draw_maze()
+        
+    def __draw_maze(self):
+        current_state = self.game.board
+        x = -1
+        for row in current_state:
+            x += 1
+            y = -1
+            for cell in row:
+                y += 1
+                if cell == 1:
+                    color = "#476042"
+                    self.__draw_tile(x, y, color, "tile"))
+                elif cell == 2:
+                    color = "yellow"
+                    self.__draw_tile(x, y, color, "tile"))
+                elif cell == 0:
+                    color = "grey"
+                    self.__draw_tile(x, y, color,"tile"))
+        
+        agent_x, agent_y = self.game.agent.x, self.game.agent.x
+        self.__draw_tile(agent_x, agent_y, "red", "agent")
+        
+    def __draw_tile(self, x, y, color, tag):
+        canvas.create_rectangle(self.canvas, TILE_SIZE*x, TILE_SIZE*y, 
+                                TILE_SIZE*(x+1), TILE_SIZE*(y+1), fill=color, tags=tag)
     
-    while running and game.round < MAX_ROUNDS:
-        game.round += 1
-        running = game.update_state()
-        player_gui_tile = canvas.find_withtag("player")
-        player_gui_tile.move_tile(CURRENT_ACTION)
-        time.sleep(GAME_SPEED)
-    print("Game finished in Round {}!".format(game.round))        
-    root.mainloop()
-    
-if __name__ == '__main__':
-    main()
-    
+    def updateUI(self):
+        agent = self.canvas.find_withtag("agent")
+        #TODO: get new position of agent
+        #TODO: move agent widget to new position
+        
