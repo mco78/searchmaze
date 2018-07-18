@@ -1,230 +1,166 @@
 # -*- coding: utf-8 -*-
 """
 SearchMaze - a maze game for testing AI
-Created on Mon Jul 16 11:08:36 2018
+Created on Wed Jul 18 13:58:16 2018
 
 @author: Marc Otten
 
-CURRENT TODOS see #TODO statements. Next: MazeGame.update function
+Contributers:
+    - "maze" by lvidarte (https://github.com/lvidarte/maze)
+    
+BUGS:
+    - start cell acts as wall when moving back to that spot
+    - exit cell acts as a wall and is not accessible
+
+TODO:
+    - implement game end
+    - implement different controll modes (manual, 
+      different agents)
+    
 """
 
-# IMPORTS
-from tkinter import Tk, Canvas, Frame, Button, BOTH, TOP, BOTTOM
-import numpy as np
-import utils
-from random import randint
+import random
+import tkinter as tk
+import sys
 
-
-# GLOBALS
-
-GAME_SPEED = 0.5 # seconds between rounds
-MAX_ROUNDS = 10 # max rounds until game interrups 
-TILE_SIZE = 50
 
 """
-MAZE
-holds the structure for the world:
-    0=empty
-    1=wall
-    2=goal
-    3=agent
-For better human reading, MAZE_GRID is created in y,x-format and 
-then transposed, so that MAZE[x][y] can be accessed properly
+MAIN CODE
 """
-MAZE_GRID = [[0,0,0,0,0,2],
-             [0,0,1,0,0,0],
-             [0,0,1,1,1,0],
-             [3,0,0,0,1,0],
-             [0,1,0,0,0,0]]
 
-MAZE = np.array(MAZE_GRID).transpose().tolist()
-MAZE_WIDTH = len(MAZE)
-MAZE_HEIGHT = len(MAZE[1])
-
-
-DIRECTIONS = {"n": [0, -1],
-              "e": [1, 0],
-              "s": [0, 1],
-              "w": [-1, 0]}
-
-# ERROR HANDLING
-
-class SearchmazeError(Exception):
-    """An application specific error."""
-    pass
-
-# MAIN CODE
-
-class Tile(object):
-    """Represents a tile in the world"""
+class Application(tk.Frame):
     
-    def __init__(self, x, y, wall=False):
-        self.x = x
-        self.y = y
-        self.wall = wall
+    def __init__(self, parent, width=21, height=21, size=10):
+         tk.Frame.__init__(self, parent)
+         self.maze = Maze(width, height)
+         self.size = size
+         self.steps = 0
+         self.grid()
+         self.create_widgets() 
+         self.draw_maze()
+         self.create_events()
+         
+    def create_widgets(self):
+        width = self.maze.width * self.size
+        height = self.maze.height * self.size
+        self.canvas = tk.Canvas(self, width=width, height=height)
+        self.canvas.grid()
+        self.status = tk.Label(self)
+        self.status.grid()
+
+    def draw_maze(self):
+        for i, row in enumerate(self.maze.maze):
+            for j, col in enumerate(row):
+                x0 = j * self.size
+                y0 = i * self.size
+                x1 = x0 + self.size
+                y1 = y0 + self.size
+                color = self.get_color(x=j, y=i)
+                id = self.canvas.create_rectangle(x0, y0, x1, y1, width=0, fill=color)
+                if self.maze.start_cell == (j, i):
+                    self.cell = id
+        self.canvas.tag_raise(self.cell) #bring to front
+        self.status.config(text="This is a status Text")
+    
+    def create_events(self):
+        self.canvas.bind_all("<KeyPress-Up>", self.move_cell)
+        self.canvas.bind_all("<KeyPress-Down>", self.move_cell)
+        self.canvas.bind_all("<KeyPress-Left>", self.move_cell)
+        self.canvas.bind_all("<KeyPress-Right>", self.move_cell)
+    
+    def move_cell(self, event):
+        if event.keysym == 'Up':
+            if self.check_move(0, -1):
+                self.canvas.move(self.cell, 0, -self.size)
+                self.steps += 1
+        if event.keysym == 'Down':
+            if self.check_move(0, 1):
+                self.canvas.move(self.cell, 0, self.size)
+                self.steps += 1
+        if event.keysym == 'Left':
+            if self.check_move(-1, 0):
+                self.canvas.move(self.cell, -self.size, 0)
+                self.steps += 1
+        if event.keysym == 'Right':
+            if self.check_move(1, 0):
+                self.canvas.move(self.cell, self.size, 0)
+                self.steps += 1
         
-    def is_on_board(self):
-        if self.x < 0 or self.y < 0 or self.x >= MAZE_WIDTH or self.y >= MAZE_HEIGHT:
-            return False
-        else:
-            return True
-
-
-class Goal(Tile):
-    """Represents the goal to escape the maze"""
+        self.status.config(text="Moves: %d" % self.steps)
+        self.check_status()
     
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def check_move(self, x, y):
+        x0, y0 = self.get_cell_coords()
+        x1 = x0 + x
+        y1 = y0 + y
+        return self.maze.maze[y1][x1] == 0
 
-class Agent(object):
-    """Represents the agent that has to escape the maze"""
+    def get_cell_coords(self):
+        position = self.canvas.coords(self.cell)
+        x = int(position[0] / self.size)
+        y = int(position[1] / self.size)
+        return (x, y)
     
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def check_status(self):
+        if self.maze.exit_cell == self.get_cell_coords():
+            self.status.config(text="Finished in %d!" % self.steps)
     
-
-    def act(self, board):
-        """Function to make decisions and then move.
-        This agent version simply goes east."""
+    def get_color(self, x, y):
+        if self.maze.start_cell == (x, y):
+            return 'red'
+        if self.maze.exit_cell == (x, y):
+            return 'green'
+        if self.maze.maze[y][x] == 1:
+            return 'black'
+       
+         
+class Maze(object):
+    """
+    A class that generates the maze. The maze is defined by a 
+    2D-list. INTs in the 2D list represent the following:
+        0: path
+        1: wall
+        2: exit
+        3: start
+    """
+    def __init__(self, width=21, height=21, exit_cell=(1,1)):
+        self.width = width
+        self.height = height
+        self.exit_cell = exit_cell
+        self.create()
         
-        action = "e"
-        print("action: {}".format(action))
-        move = DIRECTIONS[action]
-        return move
-        
-
-
-
-
-
-class MazeBoard(object):
-    """Maze Board to hold the structure of the board"""
-    def __init__(self, maze):
-        self.state = self.__create_board(maze)
-    
-    def __create_board(maze):
-        board = []
-        x = -1
-        for row in maze:
-            x += 1
-            y = -1
-            line = []
-            for cell in row:
-                y += 1
-                if cell == 0:
-                    line.append(Tile(x, y, False))
-                elif cell == 1:
-                    line.append(Tile(x, y, True))
-                elif cell == 2:
-                    line.append(Goal(x, y))
-                elif cell == 3:
-                    # create normal tile on which the agent object will sit
-                    line.append(Tile(x, y, False))
+    def create(self):
+        """
+        creates a random 2D-list. Borders are walls, the middle part 
+        consists of 80% paths and 20% walls
+        """
+        self.maze = []
+        for x in range(self.width):
+            row = []
+            for y in range(self.height):
+                if x == 0 or x == self.width-1 or y == 0 or y == self.height-1:
+                    row.append(1)
                 else:
-                    raise SearchmazeError(
-                            "Wrong tile type!"
-                            )
-            board.append(line)
-        return board
-    
-    def __get_object_at_position(self, x, y):
-        return self.state[x][y]
-    
-    def __set_object_at_position(self, obj, x, y):
-        self.state[x][y] = obj
-    
+                    r = random.random()
+                    if r < 0.8:
+                        row.append(0)
+                    else:
+                        row.append(1)
+            self.maze.append(row)
+        
+        #place exit_cell
+        self.maze[self.exit_cell[1]][self.exit_cell[0]] = 2
+        
+        #create random starting cell
+        rand_x = random.randint(1, self.width-2)
+        rand_y = random.randint(1, self.height-2)
+        self.start_cell = (rand_x, rand_y)
+        self.maze[rand_y][rand_x] = 3
 
-class MazeGame(object):
-    """ The Seachmaze game, in charge of coordinating the actions of the agent
-    and to check the winning conditions
-    """
-    def __init__(self, MAZE):
-        self.board = MazeBoard(MAZE)
-        agent_x, agent_y = self.__get_agent_position(MAZE)
-        self.agent = Agent(agent_x, agent_y)
+if __name__ == '__main__':
+    root = Tk()
+    sys.setrecursionlimit(5000)
+    app = Application(root, 10, 10, 30)
+    app.master.title('Searchmaze')
+    app.mainloop()
     
-    def start(self):
-        self.game_over = False
-        
-    def update(self):
-        agent_move = self.agent.act(self.board)
-        #TODO: update board object
-            #if move is on board
-                #if move is possible
-                    #update objects in board
-                    #update agent.x agent.y
-                #else
-                    #print message not valid
-            #update UI
-        
-        self.game_over = self.check_win()
-        
-    def check_win(self):
-        #TODO for now just return False
-        return False
-    
-    def __get_agent_position(maze):
-        x = -1
-        for row in maze:
-            x += 1
-            y = -1
-            for cell in row:
-                y += 1
-                if cell == 3:
-                    return x, y
-    
-        
-class MazeUI(Frame):
-    """
-    The Tkinter UI, responsible for drawing the maze
-    """
-    def __init__(self, parent, game):
-        self.game = game
-        self.parent = parent
-        Frame.__init__(self, parent)
-                
-        self.__initUI()
-    
-    def __initUI(self):
-        self.parent.title("Seachmaze")
-        self.pack(fill=BOTH, expand=1)
-        self.canvas = Canvas(self,
-                             width = MAZE_WIDTH * TILE_SIZE,
-                             height = MAZE_HEIGHT * TILE_SIZE)
-        
-        self.canvas.pack(fill=BOTH, side=TOP)
-        
-        self.__draw_maze()
-        
-    def __draw_maze(self):
-        current_state = self.game.board
-        x = -1
-        for row in current_state:
-            x += 1
-            y = -1
-            for cell in row:
-                y += 1
-                if cell == 1:
-                    color = "#476042"
-                    self.__draw_tile(x, y, color, "tile"))
-                elif cell == 2:
-                    color = "yellow"
-                    self.__draw_tile(x, y, color, "tile"))
-                elif cell == 0:
-                    color = "grey"
-                    self.__draw_tile(x, y, color,"tile"))
-        
-        agent_x, agent_y = self.game.agent.x, self.game.agent.x
-        self.__draw_tile(agent_x, agent_y, "red", "agent")
-        
-    def __draw_tile(self, x, y, color, tag):
-        canvas.create_rectangle(self.canvas, TILE_SIZE*x, TILE_SIZE*y, 
-                                TILE_SIZE*(x+1), TILE_SIZE*(y+1), fill=color, tags=tag)
-    
-    def updateUI(self):
-        agent = self.canvas.find_withtag("agent")
-        #TODO: get new position of agent
-        #TODO: move agent widget to new position
-        
