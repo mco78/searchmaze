@@ -8,14 +8,11 @@ Created on Wed Jul 18 13:58:16 2018
 Contributers:
     - "maze" by lvidarte (https://github.com/lvidarte/maze)
     
-BUGS:
-    - start cell acts as wall when moving back to that spot
-    - exit cell acts as a wall and is not accessible
-
 TODO:
     - implement game end
     - implement different controll modes (manual, 
       different agents)
+    - implement options for maze: take maze file or random maze
     
 """
 
@@ -93,7 +90,7 @@ class Application(tk.Frame):
         x0, y0 = self.get_cell_coords()
         x1 = x0 + x
         y1 = y0 + y
-        return self.maze.maze[y1][x1] == 0
+        return self.maze.maze[y1][x1] != 1
 
     def get_cell_coords(self):
         position = self.canvas.coords(self.cell)
@@ -131,7 +128,7 @@ class Maze(object):
         
     def create(self):
         """
-        creates a random 2D-list. Borders are walls, the middle part 
+        Creates a random 2D-list. Borders are walls, the middle part 
         consists of 80% paths and 20% walls
         """
         self.maze = []
@@ -151,14 +148,14 @@ class Maze(object):
         #place exit_cell
         self.maze[self.exit_cell[1]][self.exit_cell[0]] = 2
         
-        #create random starting cell
+        #create random starting cell 
         rand_x = random.randint(1, self.width-2)
         rand_y = random.randint(1, self.height-2)
         self.start_cell = (rand_x, rand_y)
         self.maze[rand_y][rand_x] = 3
 
 if __name__ == '__main__':
-    root = Tk()
+    root = tk.Tk()
     sys.setrecursionlimit(5000)
     app = Application(root, 10, 10, 30)
     app.master.title('Searchmaze')
