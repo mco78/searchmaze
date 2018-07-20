@@ -9,7 +9,6 @@ Contributers:
     - "maze" by lvidarte (https://github.com/lvidarte/maze)
     
 TODO:
-    - implement game end
     - implement different controll modes (manual, 
       different agents)
     - implement options for maze: take maze file or random maze
@@ -18,6 +17,7 @@ TODO:
 
 import random
 import tkinter as tk
+from tkinter import messagebox
 import sys
 
 
@@ -57,7 +57,7 @@ class Application(tk.Frame):
                 if self.maze.start_cell == (j, i):
                     self.cell = id
         self.canvas.tag_raise(self.cell) #bring to front
-        self.status.config(text="This is a status Text")
+        self.status.config(text="Let's go!")
     
     def create_events(self):
         self.canvas.bind_all("<KeyPress-Up>", self.move_cell)
@@ -100,7 +100,9 @@ class Application(tk.Frame):
     
     def check_status(self):
         if self.maze.exit_cell == self.get_cell_coords():
-            self.status.config(text="Finished in %d!" % self.steps)
+            self.status.config(text="Finished in %d moves!" % self.steps)
+            self.restart_dialogue()
+            
     
     def get_color(self, x, y):
         if self.maze.start_cell == (x, y):
@@ -109,7 +111,28 @@ class Application(tk.Frame):
             return 'green'
         if self.maze.maze[y][x] == 1:
             return 'black'
-       
+    
+    def restart_dialogue(self):
+        """Unbinds all events, if game finishes. Shows a message with 
+        instructions to restart application
+        """
+        self.canvas.unbind_all("<KeyPress-Up>")
+        self.canvas.unbind_all("<KeyPress-Down>")
+        self.canvas.unbind_all("<KeyPress-Left>")
+        self.canvas.unbind_all("<KeyPress-Right>")
+        
+        msg = "Finished in %d moves. Do you want to restart?" % self.steps
+        if messagebox.askyesno("Restart", msg):
+            self.restart()
+    
+    def restart(self):
+        self.canvas.destroy()
+        self.status.destroy()
+        self.steps = 0
+        self.create_widgets() 
+        self.draw_maze()
+        self.create_events()
+        
          
 class Maze(object):
     """
