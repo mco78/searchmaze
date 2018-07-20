@@ -28,14 +28,45 @@ MAIN CODE
 class Application(tk.Frame):
     
     def __init__(self, parent, width=21, height=21, size=10):
-         tk.Frame.__init__(self, parent)
-         self.maze = Maze(width, height)
+         self.parent = parent
+         self.width = width
+         self.height = height
          self.size = size
-         self.steps = 0
-         self.grid()
-         self.create_widgets() 
-         self.draw_maze()
-         self.create_events()
+         agent_type = self.get_options()
+         
+        
+    def get_options(self):
+        agent_option = IntVar()
+        agent_option.set(1)
+        agents = [
+                 ("manual", 1),
+                 ("go right", 2),
+                 ("random", 3)
+                 ]
+        tk.Label(self.parent, 
+               text="Choose an agent type:",
+               justify=LEFT, padx = 20
+               ).pack()
+        for txt, val in agents:
+            tk.Radiobutton(root, 
+            text=txt,
+            padx = 20, 
+            variable=agent_option, 
+            command=self.clear_options(),
+            value=val).pack(anchor=W)
+    
+    def clear_options(self):
+        print("clearing options...")
+         
+    def start(self):
+        tk.Frame.__init__(self, self.parent)
+        self.maze = Maze(self.width, self.height)
+        self.steps = 0
+        self.grid()
+        self.create_widgets() 
+        self.draw_maze()
+        self.create_events()
+        
          
     def create_widgets(self):
         width = self.maze.width * self.size
