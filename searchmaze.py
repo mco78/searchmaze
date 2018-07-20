@@ -12,7 +12,9 @@ TODO:
     - implement different controll modes (manual, 
       different agents)
     - implement options for maze: take maze file or random maze
-    
+
+CONTINUE: cant clear options menu and start the game properly
+
 """
 
 import random
@@ -28,38 +30,48 @@ MAIN CODE
 class Application(tk.Frame):
     
     def __init__(self, parent, width=21, height=21, size=10):
-         self.parent = parent
-         self.width = width
-         self.height = height
-         self.size = size
-         agent_type = self.get_options()
-         
+        self.frame = tk.Frame.__init__(self, parent)
+        self.width = width
+        self.height = height
+        self.size = size
+        self.get_options()
         
     def get_options(self):
-        agent_option = IntVar()
-        agent_option.set(1)
+        """
+        shows an radiobutton option to choose the type of agent for the game
+        """
+        agent_option = None
         agents = [
                  ("manual", 1),
                  ("go right", 2),
                  ("random", 3)
                  ]
-        tk.Label(self.parent, 
+        tk.Label(self.frame, 
                text="Choose an agent type:",
-               justify=LEFT, padx = 20
-               ).pack()
+               padx = 20
+               ).grid()
         for txt, val in agents:
-            tk.Radiobutton(root, 
+            tk.Radiobutton(self.frame, 
             text=txt,
             padx = 20, 
-            variable=agent_option, 
-            command=self.clear_options(),
-            value=val).pack(anchor=W)
+            variable=agents, 
+            value=val).grid()
+        
+        tk.Button(self.frame,
+                  text="Start",
+                  padx = 20, 
+                  command=lambda : self.clear_options(agent_option)
+                  ).grid()
     
-    def clear_options(self):
-        print("clearing options...")
+    def clear_options(self, agent_option):
+        """clears the option menu and starts the main game"""
+        self.agent_type = agent_option
+        for widget in self.winfo_children():
+            widget.destroy() #does not work!
+        self.start()
          
     def start(self):
-        tk.Frame.__init__(self, self.parent)
+        self.game_frame = tk.Frame(self, self.frame)
         self.maze = Maze(self.width, self.height)
         self.steps = 0
         self.grid()
