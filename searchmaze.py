@@ -7,6 +7,9 @@ Created on Wed Jul 18 13:58:16 2018
 
 Contributers:
     - "maze" by lvidarte (https://github.com/lvidarte/maze)
+
+NEXT:
+    - options menu functionality
     
 TODO:
     - implement different controll modes (manual, 
@@ -19,11 +22,18 @@ BUGS:
 """
 
 import random
+import time
 import tkinter as tk
 from tkinter import messagebox
 import sys
 
-
+"""
+FIXTURES
+"""
+DIRECTIONS = {"u": [0, -1],
+              "r": [1, 0],
+              "d": [0, 1],
+              "l": [-1, 0]}
 """
 MAIN CODE
 """
@@ -37,37 +47,42 @@ class Application(tk.Frame):
         self.height = height
         self.size = size
         self.get_options()
-        
+    
+    """
+    OPTIONS DIALOGUE
+    """
+    
     def get_options(self):
         """
         shows an radiobutton option to choose the type of agent for the game
         """
-        options_frame = tk.LabelFrame(self, text="Options")
-#                                 width=self.width * self.size, 
-#                                 height=self.height * self.size)
-        agent_option = None
+        options_frame = tk.Frame(self)
         agents = [
                  ("manual", 1),
                  ("go right", 2),
                  ("random", 3)
                  ]
+        agent_option = tk.IntVar()
+        agent_option.set(1)
+        
         tk.Label(options_frame, 
-               text="Agent type:",
+               text="Choose the type of Agent:",
                padx = 20
-               ).grid(row=0, column=0)
+               ).grid()
         r = -1
         for txt, val in agents:
             r += 1
             tk.Radiobutton(options_frame, 
-            text=txt,
-            padx = 20, 
-            variable=agents, 
-            value=val).grid(row=r, column=1)
+                           text=txt,
+                           indicatoron = 0,
+                           padx = 20, 
+                           variable=agent_option,
+                           value=val).grid()
         
         tk.Button(options_frame,
                   text="Start",
                   padx = 20, 
-                  command=lambda : self.clear_options(options_frame, agent_option)
+                  command=lambda : self.clear_options(options_frame, agent_option.get())
                   ).grid(row=4, column=1)
         
         options_frame.grid()
@@ -78,6 +93,10 @@ class Application(tk.Frame):
         options_frame.destroy()
         self.start()
          
+    """
+    SET UP MAZE
+    """
+    
     def start(self):
         self.game_frame = tk.Frame(self)
         self.maze = Maze(self.width, self.height)
@@ -85,9 +104,11 @@ class Application(tk.Frame):
         self.grid()
         self.create_widgets() 
         self.draw_maze()
-        self.create_events()
-        
-         
+        if self.agent_type == 1:
+            self.create_events()
+        else:
+            self.create_AI_Agent()
+            
     def create_widgets(self):
         width = self.maze.width * self.size
         height = self.maze.height * self.size
@@ -110,32 +131,70 @@ class Application(tk.Frame):
         self.canvas.tag_raise(self.cell) #bring to front
         self.status.config(text="Let's go!")
     
-    def create_events(self):
-        self.canvas.bind_all("<KeyPress-Up>", self.move_cell)
-        self.canvas.bind_all("<KeyPress-Down>", self.move_cell)
-        self.canvas.bind_all("<KeyPress-Left>", self.move_cell)
-        self.canvas.bind_all("<KeyPress-Right>", self.move_cell)
-    
-    def move_cell(self, event):
-        if event.keysym == 'Up':
-            if self.check_move(0, -1):
-                self.canvas.move(self.cell, 0, -self.size)
-                self.steps += 1
-        if event.keysym == 'Down':
-            if self.check_move(0, 1):
-                self.canvas.move(self.cell, 0, self.size)
-                self.steps += 1
-        if event.keysym == 'Left':
-            if self.check_move(-1, 0):
-                self.canvas.move(self.cell, -self.size, 0)
-                self.steps += 1
-        if event.keysym == 'Right':
-            if self.check_move(1, 0):
-                self.canvas.move(self.cell, self.size, 0)
-                self.steps += 1
-        
+    """
+    MOVING CELL
+    """
+    def move_cell(self, action):
+        if action == "u":
+            self.canvas.move(self.cell, 0, -self.size)
+        elif action == "d":
+            self.canvas.move(self.cell, 0, self.size)
+        elif action == "l":
+            self.canvas.move(self.cell, -self.size, 0)
+        elif action == "r":
+            self.canvas.move(self.cell, self.size, 0)
+        self.steps += 1
         self.status.config(text="Moves: %d" % self.steps)
         self.check_status()
+    
+    """ 
+    MANUAL MODE
+    """
+    def create_events(self):
+        self.canvas.bind_all("<KeyPress-Up>", self.manual_move)
+        self.canvas.bind_all("<KeyPress-Down>", self.manual_move)
+        self.canvas.bind_all("<KeyPress-Left>", self.manual_move)
+        self.canvas.bind_all("<KeyPress-Right>", self.manual_move)
+    
+    def manual_move(self, event):
+        if event.keysym == 'Up':
+            if self.check_move(0, -1):
+                self.move_cell("u")
+        if event.keysym == 'Down':
+            if self.check_move(0, 1):
+                self.move_cell("d")
+        if event.keysym == 'Left':
+            if self.check_move(-1, 0):
+                self.move_cell("l")
+        if event.keysym == 'Right':
+            if self.check_move(1, 0):
+                self.move_cell("r")
+    
+    """
+    AI MODE
+    """
+    
+    def create_AI_Agent(self):
+        #choose the type of agent from options
+        if self.agent_type == 2:
+            #create right going agent
+            self.agent = GoRightAgent()
+        elif self.agent_type == 3:
+            #create random agent
+            self.agent = RandomAgent()
+        else:
+            print("agent type not available...")
+            
+        #perform agent thinking and then move cell with correct event)
+        for i in range(5): #perform 5 moves max
+            action = self.agent.think(self)
+            self.move_cell(action)
+            time.sleep(1)
+    
+    
+    """
+    CLASS UTILS
+    """
     
     def check_move(self, x, y):
         x0, y0 = self.get_cell_coords()
@@ -149,12 +208,6 @@ class Application(tk.Frame):
         y = int(position[1] / self.size)
         return (x, y)
     
-    def check_status(self):
-        if self.maze.exit_cell == self.get_cell_coords():
-            self.status.config(text="Finished in %d moves!" % self.steps)
-            self.restart_dialogue()
-            
-    
     def get_color(self, x, y):
         if self.maze.start_cell == (x, y):
             return 'red'
@@ -162,6 +215,15 @@ class Application(tk.Frame):
             return 'green'
         if self.maze.maze[y][x] == 1:
             return 'black'
+    
+    """
+    GAME END
+    """
+    
+    def check_status(self):
+        if self.maze.exit_cell == self.get_cell_coords():
+            self.status.config(text="Finished in %d moves!" % self.steps)
+            self.restart_dialogue()
     
     def restart_dialogue(self):
         """Unbinds all events, if game finishes. Shows a message with 
@@ -183,7 +245,11 @@ class Application(tk.Frame):
         self.create_widgets() 
         self.draw_maze()
         self.create_events()
-        
+
+
+"""
+MAZE CLASS
+"""
          
 class Maze(object):
     """
@@ -228,6 +294,34 @@ class Maze(object):
         self.start_cell = (rand_x, rand_y)
         self.maze[rand_y][rand_x] = 3
 
+
+"""
+AGENT CLASSES
+"""
+
+class GoRightAgent(object):
+    """
+    Very basic version of an agent, always tries to move right
+    """
+    def think(self, game):
+        if game.check_move(1, 0):
+            return "r"
+        else:
+            print("No possible moves...")
+
+class RandomAgent(object):
+    """
+    Basic agent that chooses a random direction
+    """
+    def think(self, game):
+        actions =["u", "d", "l", "r"]
+        r = random.randint(0,3)
+        action = DIRECTIONS[actions[r]]
+        if game.check_move(action[0], action[1]):
+            return action
+        else:
+            print("Action not possible...")
+        
 
 if __name__ == '__main__':
     root = tk.Tk()
