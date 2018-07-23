@@ -98,7 +98,7 @@ class Application(tk.Frame):
     """
     
     def start(self):
-        self.game_frame = tk.Frame(self)
+#        self.game_frame = tk.Frame(self)
         self.maze = Maze(self.width, self.height)
         self.steps = 0
         self.grid()
@@ -108,6 +108,7 @@ class Application(tk.Frame):
             self.create_events()
         else:
             self.create_AI_Agent()
+            self.create_AI_events()
             
     def create_widgets(self):
         width = self.maze.width * self.size
@@ -184,13 +185,13 @@ class Application(tk.Frame):
             self.agent = RandomAgent()
         else:
             print("agent type not available...")
-            
-        #perform agent thinking and then move cell with correct event)
-        for i in range(5): #perform 5 moves max
-            action = self.agent.think(self)
-            self.move_cell(action)
-            time.sleep(1)
-    
+                
+    def create_AI_events(self):
+        self.canvas.bind_all("<space>", self.AI_move)
+        
+    def AI_move(self, event):
+        action = self.agent.think(self)
+        self.move_cell(action)
     
     """
     CLASS UTILS
@@ -311,17 +312,18 @@ class GoRightAgent(object):
 
 class RandomAgent(object):
     """
-    Basic agent that chooses a random direction
+    Basic agent that chooses a random direction, that is possible
     """
     def think(self, game):
-        actions =["u", "d", "l", "r"]
-        r = random.randint(0,3)
-        action = DIRECTIONS[actions[r]]
-        if game.check_move(action[0], action[1]):
-            return action
-        else:
-            print("Action not possible...")
-        
+        actions = ["u", "d", "l", "r"]
+        for i in range(len(actions)):
+            r = random.randint(0, (len(actions)-1))
+            action = DIRECTIONS[actions[r]]
+            if game.check_move(action[0], action[1]):
+                return actions[r]
+            else:
+                del actions[r]
+
 
 if __name__ == '__main__':
     root = tk.Tk()
