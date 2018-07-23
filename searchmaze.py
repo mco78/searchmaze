@@ -7,9 +7,6 @@ Created on Wed Jul 18 13:58:16 2018
 
 Contributers:
     - "maze" by lvidarte (https://github.com/lvidarte/maze)
-
-NEXT:
-    - options menu functionality
     
 TODO:
     - implement different controll modes (manual, 
@@ -18,6 +15,7 @@ TODO:
 
 BUGS:
     - size of options frame should be the same size than maze later
+    - AI agents should move without keyboard input!
 
 """
 
@@ -51,7 +49,6 @@ class Application(tk.Frame):
     """
     OPTIONS DIALOGUE
     """
-    
     def get_options(self):
         """
         shows an radiobutton option to choose the type of agent for the game
@@ -96,9 +93,7 @@ class Application(tk.Frame):
     """
     SET UP MAZE
     """
-    
     def start(self):
-#        self.game_frame = tk.Frame(self)
         self.maze = Maze(self.width, self.height)
         self.steps = 0
         self.grid()
@@ -107,7 +102,7 @@ class Application(tk.Frame):
         if self.agent_type == 1:
             self.create_events()
         else:
-            self.create_AI_Agent()
+            self.create_AI_agent()
             self.create_AI_events()
             
     def create_widgets(self):
@@ -145,6 +140,7 @@ class Application(tk.Frame):
         elif action == "r":
             self.canvas.move(self.cell, self.size, 0)
         self.steps += 1
+        self.canvas.update()
         self.status.config(text="Moves: %d" % self.steps)
         self.check_status()
     
@@ -174,14 +170,10 @@ class Application(tk.Frame):
     """
     AI MODE
     """
-    
-    def create_AI_Agent(self):
-        #choose the type of agent from options
+    def create_AI_agent(self):
         if self.agent_type == 2:
-            #create right going agent
             self.agent = GoRightAgent()
         elif self.agent_type == 3:
-            #create random agent
             self.agent = RandomAgent()
         else:
             print("agent type not available...")
@@ -196,7 +188,6 @@ class Application(tk.Frame):
     """
     CLASS UTILS
     """
-    
     def check_move(self, x, y):
         x0, y0 = self.get_cell_coords()
         x1 = x0 + x
@@ -220,7 +211,6 @@ class Application(tk.Frame):
     """
     GAME END
     """
-    
     def check_status(self):
         if self.maze.exit_cell == self.get_cell_coords():
             self.status.config(text="Finished in %d moves!" % self.steps)
@@ -286,10 +276,8 @@ class Maze(object):
                         row.append(1)
             self.maze.append(row)
         
-        #place exit_cell
         self.maze[self.exit_cell[1]][self.exit_cell[0]] = 2
         
-        #create random starting cell 
         rand_x = random.randint(1, self.width-2)
         rand_y = random.randint(1, self.height-2)
         self.start_cell = (rand_x, rand_y)
@@ -300,7 +288,10 @@ class Maze(object):
 AGENT CLASSES
 """
 
-class GoRightAgent(object):
+class Agent(object):
+    pass
+
+class GoRightAgent(Agent):
     """
     Very basic version of an agent, always tries to move right
     """
@@ -310,7 +301,7 @@ class GoRightAgent(object):
         else:
             print("No possible moves...")
 
-class RandomAgent(object):
+class RandomAgent(Agent):
     """
     Basic agent that chooses a random direction, that is possible
     """
@@ -324,7 +315,9 @@ class RandomAgent(object):
             else:
                 del actions[r]
 
-
+"""
+MAIN FUNCTION
+"""
 if __name__ == '__main__':
     root = tk.Tk()
     sys.setrecursionlimit(5000)
