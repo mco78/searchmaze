@@ -32,6 +32,9 @@ DIRECTIONS = {"u": [0, -1],
               "r": [1, 0],
               "d": [0, 1],
               "l": [-1, 0]}
+
+AI_MOVEMENT_SPEED = 200
+
 """
 MAIN CODE
 """
@@ -53,7 +56,9 @@ class Application(tk.Frame):
         """
         shows an radiobutton option to choose the type of agent for the game
         """
-        options_frame = tk.Frame(self)
+        options_frame = tk.Frame(self, 
+                                 width=self.width * self.size, 
+                                 height=self.height * self.size)
         agents = [
                  ("manual", 1),
                  ("go right", 2),
@@ -71,7 +76,7 @@ class Application(tk.Frame):
             r += 1
             tk.Radiobutton(options_frame, 
                            text=txt,
-                           indicatoron = 0,
+#                           indicatoron = 0,
                            padx = 20, 
                            variable=agent_option,
                            value=val).grid()
@@ -80,7 +85,7 @@ class Application(tk.Frame):
                   text="Start",
                   padx = 20, 
                   command=lambda : self.clear_options(options_frame, agent_option.get())
-                  ).grid(row=4, column=1)
+                  ).grid()
         
         options_frame.grid()
     
@@ -103,7 +108,7 @@ class Application(tk.Frame):
             self.create_events()
         else:
             self.create_AI_agent()
-            self.create_AI_events()
+            self.create_AI_loop()
             
     def create_widgets(self):
         width = self.maze.width * self.size
@@ -178,10 +183,11 @@ class Application(tk.Frame):
         else:
             print("agent type not available...")
                 
-    def create_AI_events(self):
-        self.canvas.bind_all("<space>", self.AI_move)
+    def create_AI_loop(self):
+        self.AI_move()
+        root.after(AI_MOVEMENT_SPEED, self.create_AI_loop)
         
-    def AI_move(self, event):
+    def AI_move(self):
         action = self.agent.think(self)
         self.move_cell(action)
     
