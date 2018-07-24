@@ -7,6 +7,7 @@ Created on Wed Jul 18 13:58:16 2018
 
 Contributers:
     - "maze" by lvidarte (https://github.com/lvidarte/maze)
+
     
 TODO:
     - implement different controll modes (manual, 
@@ -15,12 +16,10 @@ TODO:
 
 BUGS:
     - size of options frame should be the same size than maze later
-    - AI agents should move without keyboard input!
 
 """
 
 import random
-import time
 import tkinter as tk
 from tkinter import messagebox
 import sys
