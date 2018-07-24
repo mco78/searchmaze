@@ -10,13 +10,12 @@ Contributers:
 
     
 TODO:
-    - implement different controll modes (manual, 
-      different agents)
     - implement options for maze: take maze file or random maze
+    - implement new agents!
+    - restart option with new option selection
 
 BUGS:
-    - size of options frame should be the same size than maze later
-
+    - 
 """
 
 import random
@@ -27,6 +26,7 @@ import sys
 """
 FIXTURES
 """
+
 DIRECTIONS = {"u": [0, -1],
               "r": [1, 0],
               "d": [0, 1],
@@ -46,6 +46,14 @@ class Application(tk.Frame):
         self.width = width
         self.height = height
         self.size = size
+        
+        root.geometry("520x340+400+400")
+        
+        self.options_frame = tk.Frame(self, width=150, height=300)
+        self.options_frame.grid(row = 0, column = 0)
+        self.game_frame = tk.Frame(self, bg = "white", width=300, height=300)
+        self.game_frame.grid(row = 0, column = 1)
+    
         self.get_options()
     
     """
@@ -53,11 +61,9 @@ class Application(tk.Frame):
     """
     def get_options(self):
         """
-        shows an radiobutton option to choose the type of agent for the game
+        shows a radiobutton option to choose the type of agent for the game
         """
-        options_frame = tk.Frame(self, 
-                                 width=self.width * self.size, 
-                                 height=self.height * self.size)
+
         agents = [
                  ("manual", 1),
                  ("go right", 2),
@@ -66,32 +72,39 @@ class Application(tk.Frame):
         agent_option = tk.IntVar()
         agent_option.set(1)
         
-        tk.Label(options_frame, 
+        tk.Label(self.options_frame, 
                text="Choose the type of Agent:",
                padx = 20
                ).grid()
         r = -1
+        self.radio_buttons = []
         for txt, val in agents:
             r += 1
-            tk.Radiobutton(options_frame, 
+            self.radio_buttons.append(
+                    tk.Radiobutton(self.options_frame, 
                            text=txt,
-#                           indicatoron = 0,
                            padx = 20, 
                            variable=agent_option,
-                           value=val).grid()
+                           value=val))
+        for button in self.radio_buttons:
+            button.grid()
         
-        tk.Button(options_frame,
+        self.start_button = tk.Button(self.options_frame,
                   text="Start",
                   padx = 20, 
-                  command=lambda : self.clear_options(options_frame, agent_option.get())
-                  ).grid()
-        
-        options_frame.grid()
+                  command=lambda : self.clear_options(self.options_frame, agent_option.get())
+                  )
+        self.start_button.grid()
     
     def clear_options(self, options_frame, agent_option):
-        """clears the option menu and starts the main game"""
+        """
+        disables the option menu and starts the main game
+        """
         self.agent_type = agent_option
-        options_frame.destroy()
+        
+        self.start_button['state'] = DISABLED
+        for button in self.radio_buttons:
+            button['state'] = DISABLED
         self.start()
          
     """
@@ -100,7 +113,7 @@ class Application(tk.Frame):
     def start(self):
         self.maze = Maze(self.width, self.height)
         self.steps = 0
-        self.grid()
+#        self.grid()
         self.create_widgets() 
         self.draw_maze()
         if self.agent_type == 1:
@@ -112,10 +125,10 @@ class Application(tk.Frame):
     def create_widgets(self):
         width = self.maze.width * self.size
         height = self.maze.height * self.size
-        self.canvas = tk.Canvas(self, width=width, height=height)
+        self.canvas = tk.Canvas(self.game_frame, width=width, height=height)
         self.canvas.grid()
         self.status = tk.Label(self)
-        self.status.grid()
+        self.status.grid(row=1, column=1)
 
     def draw_maze(self):
         for i, row in enumerate(self.maze.maze):
