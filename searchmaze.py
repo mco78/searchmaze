@@ -17,7 +17,7 @@ TODO:
     - implement exception handling
 
 BUGS:
-    - 
+    - AI agent keeps on running after restart dialogue anwered with no
 """
 
 import random
@@ -131,6 +131,7 @@ class Application(tk.Frame):
         """
         self.agent_type = agent_option
         self.maze_type = maze_option
+        print(str(self.maze_type))
         if self.maze_type == 1:
             self.maze_file = "maze1.maze"
         if self.maze_type == 2:
@@ -145,10 +146,10 @@ class Application(tk.Frame):
     SET UP MAZE
     """
     def start(self):
-        if self.maze_type == 1:
-            self.maze = Maze(self.maze_file)
-        else:
+        if self.maze_type == 3: #Could be needed to update after more mazes added!
             self.maze = Maze(self.width, self.height)
+        else:
+            self.maze = Maze(self.maze_file)
         
         self.steps = 0
         self.create_widgets() 
