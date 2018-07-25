@@ -48,3 +48,18 @@ class RandomAgent(Agent):
                 return actions[r]
             else:
                 del actions[r]
+                
+class BFSAgent(Agent):
+    """
+    Agent with "Breadth First Search" orientated on Berkley AI Course
+    """
+    def tink(self, game):
+        #possible steps (say 3)
+            #take 1st possible step
+                #finish?
+            #take 2nd possible step
+                #finish?
+            #take 3rd possible step
+                #finish?
+        #maybe with anytree?
+        pass
