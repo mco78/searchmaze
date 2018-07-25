@@ -11,14 +11,17 @@ Contributers:
     
 TODO:
     - implement options for maze: take maze file or random maze
+    - implement maze file selection
     - implement new agents!
     - restart option with new option selection
+    - implement exception handling
 
 BUGS:
     - 
 """
 
 import random
+from functools import reduce
 import tkinter as tk
 from tkinter import messagebox
 import sys
@@ -72,48 +75,82 @@ class Application(tk.Frame):
         agent_option = tk.IntVar()
         agent_option.set(1)
         
-        tk.Label(self.options_frame, 
-               text="Choose the type of Agent:",
-               padx = 20
-               ).grid()
-        r = -1
+        mazes = [
+                ("Maze 1", 1),
+                ("Maze 2", 2),
+                ("random", 3)
+                ]
+        maze_option = tk.IntVar()
+        maze_option.set(2)
+        
+        agent_label = tk.Label(self.options_frame, 
+                               text="Choose the type of agent:",
+                               padx = 20)
+        agent_label.grid(row=0)
+        
+        r = 0
         self.radio_buttons = []
         for txt, val in agents:
             r += 1
-            self.radio_buttons.append(
-                    tk.Radiobutton(self.options_frame, 
-                           text=txt,
-                           padx = 20, 
-                           variable=agent_option,
-                           value=val))
-        for button in self.radio_buttons:
-            button.grid()
-        
+            button = tk.Radiobutton(self.options_frame, 
+                                    text=txt,
+                                    padx = 20, 
+                                    variable=agent_option,
+                                    value=val)
+            button.grid(row=r)
+            self.radio_buttons.append(button)
+            
+        tk.Label(self.options_frame,
+                 text="Choose a maze:",
+                 padx = 20
+                 ).grid(row=r+1)
+        r = r + 1 #skip one row for label
+        for txt, val in mazes:
+            r += 1
+            button = tk.Radiobutton(self.options_frame,
+                                    text=txt,
+                                    padx=20,
+                                    variable=maze_option,
+                                    value=val)
+            button.grid(row=r)
+            self.radio_buttons.append(button)
+
+
         self.start_button = tk.Button(self.options_frame,
                   text="Start",
                   padx = 20, 
-                  command=lambda : self.clear_options(self.options_frame, agent_option.get())
+                  command=lambda : self.clear_options(self.options_frame,
+                                                      agent_option.get(), 
+                                                      maze_option.get())
                   )
-        self.start_button.grid()
+        self.start_button.grid(row=r+1)
     
-    def clear_options(self, options_frame, agent_option):
+    def clear_options(self, options_frame, agent_option, maze_option):
         """
         disables the option menu and starts the main game
         """
         self.agent_type = agent_option
+        self.maze_type = maze_option
+        if self.maze_type == 1:
+            self.maze_file = "maze1.maze"
+        if self.maze_type == 2:
+            self.maze_file = "maze2.maze"
         
-        self.start_button['state'] = DISABLED
+        self.start_button['state'] = 'disabled'
         for button in self.radio_buttons:
-            button['state'] = DISABLED
+            button['state'] = 'disabled'
         self.start()
          
     """
     SET UP MAZE
     """
     def start(self):
-        self.maze = Maze(self.width, self.height)
+        if self.maze_type == 1:
+            self.maze = Maze(self.maze_file)
+        else:
+            self.maze = Maze(self.width, self.height)
+        
         self.steps = 0
-#        self.grid()
         self.create_widgets() 
         self.draw_maze()
         if self.agent_type == 1:
@@ -269,13 +306,21 @@ class Maze(object):
         2: exit
         3: start
     """
-    def __init__(self, width=21, height=21, exit_cell=(1,1)):
-        self.width = width
-        self.height = height
-        self.exit_cell = exit_cell
-        self.create()
-        
-    def create(self):
+    def __init__(self, filename=None, width=21, height=21, exit_cell=(1,1)):
+        if filename:
+            self.maze = self.parse_file(filename)
+            self.width = len(self.maze[0])
+            self.height = len(self.maze)
+            self.exit_cell = self.find_cell(2)
+            self.start_cell = self.find_cell(3) 
+        else:
+            self.width = width
+            self.height = height
+            self.exit_cell = exit_cell
+            self.create_random()
+    
+    
+    def create_random(self):
         """
         Creates a random 2D-list. Borders are walls, the middle part 
         consists of 80% paths and 20% walls
@@ -300,6 +345,45 @@ class Maze(object):
         rand_y = random.randint(1, self.height-2)
         self.start_cell = (rand_x, rand_y)
         self.maze[rand_y][rand_x] = 3
+    
+    
+    def parse_file(self, filename):
+        board = []
+        with open(filename, 'r') as f:
+            content = f.readlines()
+            for line in content:
+                row = []
+                strip_line = line.rstrip()
+                for c in strip_line:
+                    row.append(int(c))
+                board.append(row)
+        # basic validation of file - could be handled with exceptions
+        all_elements = reduce(lambda x,y :x+y, board)
+        if len(board) != 10 or len(board[1]) != 10:
+            print("ERORR: File dimensions do not fit!")
+            return None
+        elif max(all_elements) > 3 or min(all_elements) < 0:
+            print("ERROR: File contains invalid characters")
+            return None
+        elif all_elements.count(2) != 1:
+            print("ERROR: File has not one exit")
+            return None
+        elif all_elements.count(3) != 1:
+            print("ERROR: File has not one start")
+            return None
+        else:
+            return board
+        
+    def find_cell(self, element):
+        y = -1
+        for row in self.maze:
+            y += 1
+            x = -1
+            for pos in row:
+                x += 1
+                if pos == element:
+                    return (x, y)
+    
 
 
 """
