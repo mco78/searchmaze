@@ -10,13 +10,17 @@ Contributers:
 
     
 TODO:
-    - implement maze file selection
-    - implement new agents!
+    - implement small dots for evaluated positions (think method deliveres a 
+    new type of action that draws the dot, then evaluation continues...)
+    - implement DFS agent
+    - implement flexible maze size
+    - implement maze file selection    
     - restart option with new option selection
     - implement exception handling
 
 BUGS:
     - AI agent keeps on running after restart dialogue anwered with no
+    - radom maze doesn't work anymore -> OS ERROR
 """
 
 
