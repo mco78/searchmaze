@@ -23,7 +23,16 @@ AGENT CLASSES
 """
 
 class Agent(object):
-    pass
+    
+    def get_possible_directions(self, game, position):
+        """get all possible free positions next to position"""
+        poss_actions = []
+        for d in DIRECTIONS:
+            if game.check_move_from_position(position, DIRECTIONS[d][0], DIRECTIONS[d][1]):
+                poss_actions.append(DIRECTIONS[d])
+        print("possible directions: %s" %str(poss_actions))
+        return poss_actions
+
 
 class GoRightAgent(Agent):
     """
@@ -53,7 +62,7 @@ class BFSAgent(Agent):
     """
     Agent with "Breadth First Search" orientated on Berkley AI Course
     """
-    def tink(self, game):
+    def think(self, game):
         #possible steps (say 3)
             #take 1st possible step
                 #finish?
@@ -62,4 +71,49 @@ class BFSAgent(Agent):
             #take 3rd possible step
                 #finish?
         #maybe with anytree?
-        pass
+        exit_found = False
+        
+        start = game.get_cell_coords()
+        visited = [] #virtually visited positions while thinking
+        visited.append(start)
+        next_to_eval = []
+        next_to_eval.append(start)
+        
+        while exit_found == False:
+            current = next_to_eval[0]
+            print("Evaluating %s" %str(current))
+            if current == game.maze.exit_cell:
+                print("Position %s is the exit!" % str(current))
+                exit_found = True
+            else:
+                poss_dir = self.get_possible_directions(game, current)
+                poss_pos = []
+                for d in poss_dir:
+                    poss_pos.append((current[0] + d[0], current[1] + d[1]))
+                print("possible positions: %s" %str(poss_pos))
+                eval_pos = []
+                for pos in poss_pos:
+                    if pos not in visited:
+                        eval_pos.append(pos) #positions to evaluate
+                print("positions to evaluate: %s" %str(eval_pos))
+                for ev in eval_pos:
+                    print("Adding %s" %str(ev))
+                    visited.append(ev)
+                    next_to_eval.append(ev)
+                next_to_eval.remove(current)
+                print("Eval Queue %s:" %str(next_to_eval))
+                print("Visited %s: " %str(visited))
+                
+        """
+        TODO: 
+            - Create a Dir with all the successors to each position, so when
+              solution is found, agent has a path to walk
+            - draw small dot or something on the canvas for evaluated positions
+            - apply actual move with the plan
+        """
+            
+        
+    
+    
+        
+    

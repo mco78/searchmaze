@@ -63,7 +63,8 @@ class Application(tk.Frame):
         agents = [
                  ("manual", 1),
                  ("go right", 2),
-                 ("random", 3)
+                 ("random", 3),
+                 ("BFS", 4)
                  ]
         agent_option = tk.IntVar()
         agent_option.set(1)
@@ -124,7 +125,6 @@ class Application(tk.Frame):
         """
         self.agent_type = agent_option
         self.maze_type = maze_option
-        print(str(self.maze_type))
         if self.maze_type == 1:
             self.maze_file = "maze1.maze"
         if self.maze_type == 2:
@@ -223,6 +223,8 @@ class Application(tk.Frame):
             self.agent = GoRightAgent()
         elif self.agent_type == 3:
             self.agent = RandomAgent()
+        elif self.agent_type == 4:
+            self.agent = BFSAgent()
         else:
             print("agent type not available...")
                 
@@ -238,7 +240,11 @@ class Application(tk.Frame):
     CLASS UTILS
     """
     def check_move(self, x, y):
-        x0, y0 = self.get_cell_coords()
+        position = self.get_cell_coords()
+        return self.check_move_from_position(position, x, y)
+            
+    def check_move_from_position(self, position, x, y):
+        x0, y0 = position
         x1 = x0 + x
         y1 = y0 + y
         return self.maze.maze[y1][x1] != 1
