@@ -10,16 +10,15 @@ Contributers:
 
     
 TODO:
-    - implement small dots for evaluated positions (think method deliveres a 
-    new type of action that draws the dot, then evaluation continues...)
     - implement DFS agent
     - implement flexible maze size
     - implement maze file selection    
     - restart option with new option selection
     - implement exception handling
+    - document all classes and methods
 
 BUGS:
-    - AI agent keeps on running after restart dialogue anwered with no
+    - AI agent keeps on running after restart dialogue anwered with no (combine with new restart options!)
     - radom maze doesn't work anymore -> OS ERROR
 """
 

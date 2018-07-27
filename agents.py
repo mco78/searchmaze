@@ -76,6 +76,11 @@ class BFSAgent(Agent):
         self.evaluated = 0
     
     def think(self, game):
+        """
+        If agent has a plan, it follows it and returns an action. If there is
+        not plan it evaluates next position in self.next_to_eval and returns 
+        evaluated position (for drawing a dot in GUI)
+        """
         if not self.plan:
             eval_pos = self.get_plan(game)
             return eval_pos
@@ -85,6 +90,11 @@ class BFSAgent(Agent):
             return action
     
     def get_plan(self, game):
+        """
+        evaluate neighboured positions if there is the exit. if exit is reached
+        submit plan. save new positions to be evaluated in self.next_to_eval.
+        In any case return evaluated position.
+        """
         if self.exit_found == False:
             current = self.next_to_eval[0]
             self.evaluated += 1
