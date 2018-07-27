@@ -65,33 +65,32 @@ class BFSAgent(Agent):
     
     """
     
-    def __init__(self):
+    def __init__(self, game):
         self.plan = None
+        self.exit_found = False
+        self.visited = []
+        self.start = Position(game.get_cell_coords(), None)
+        self.visited.append(self.start.position)
+        self.next_to_eval = []
+        self.next_to_eval.append(self.start)
+        self.evaluated = 0
     
     def think(self, game):
         if not self.plan:
-            self.get_plan(game)
-            return None
+            eval_pos = self.get_plan(game)
+            return eval_pos
         else:
             action = self.plan[0]
             del self.plan[0]
             return action
     
     def get_plan(self, game):
-        exit_found = False        
-        start = Position(game.get_cell_coords(), None)
-        visited = [] #virtually visited positions (as tuple) while thinking
-        visited.append(start.position)
-        next_to_eval = []
-        next_to_eval.append(start)
-        evaluated = 0
-        
-        while exit_found == False:
-            current = next_to_eval[0]
-            evaluated += 1
+        if self.exit_found == False:
+            current = self.next_to_eval[0]
+            self.evaluated += 1
             print("Evaluating %s" %str(current.position))
             if current.position == game.maze.exit_cell:
-                exit_found = True
+                self.exit_found = True
                 #translate path to plan for directions
                 plan = []
                 for i in range(len(current.ancestors)):
@@ -106,9 +105,10 @@ class BFSAgent(Agent):
                 for ac, pos in DIRECTIONS.items():
                         if pos == (x1, y1):
                             plan.append(ac)    
-                print("%i positions evaluated." % evaluated)
+                print("%i positions evaluated." % self.evaluated)
                 print("submitting plan with %i steps." %len(plan))
                 self.plan = plan
+                return current.position
             
             else:
                 #get possible directions
@@ -129,12 +129,13 @@ class BFSAgent(Agent):
                 #remove already visited positions
                 eval_pos = []
                 for pos in poss_pos:
-                    if pos.position not in visited: 
+                    if pos.position not in self.visited: 
                         eval_pos.append(pos)
                 for ev in eval_pos:
-                    visited.append(ev.position)
-                    next_to_eval.append(ev)
-                next_to_eval.remove(current)             
+                    self.visited.append(ev.position)
+                    self.next_to_eval.append(ev)
+                self.next_to_eval.remove(current)
+                return current.position
   
 
 class Position(object):

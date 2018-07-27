@@ -28,11 +28,12 @@ from functools import reduce
 import tkinter as tk
 from tkinter import messagebox
 import sys
+from math import floor
 
 from agents import *
 
 
-AI_MOVEMENT_SPEED = 200
+AI_MOVEMENT_SPEED = 150
 
 """
 MAIN CODE
@@ -196,6 +197,15 @@ class Application(tk.Frame):
         self.status.config(text="Moves: %d" % self.steps)
         self.check_status()
     
+    def draw_eval_dot(self, action):
+        #TODO
+        x0 = action[0] * self.size + floor(0.4 * self.size)
+        x1 = x0 + floor(0.2 * self.size)
+        y0 = action[1] * self.size + floor(0.4 * self.size)
+        y1 = y0 + floor(0.2 * self.size)
+        self.canvas.create_oval(x0, y0, x1, y1, fill="gray82")
+        
+    
     """ 
     MANUAL MODE
     """
@@ -228,7 +238,7 @@ class Application(tk.Frame):
         elif self.agent_type == 3:
             self.agent = RandomAgent()
         elif self.agent_type == 4:
-            self.agent = BFSAgent()
+            self.agent = BFSAgent(self)
         else:
             print("agent type not available...")
                 
@@ -238,7 +248,10 @@ class Application(tk.Frame):
         
     def AI_move(self):
         action = self.agent.think(self)
-        self.move_cell(action)
+        if type(action) == tuple: #no actual move, just evaluating a position
+            self.draw_eval_dot(action)
+        else:
+            self.move_cell(action)
     
     """
     CLASS UTILS
