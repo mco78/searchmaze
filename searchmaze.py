@@ -9,16 +9,11 @@ Contributers:
     - "maze" by lvidarte (https://github.com/lvidarte/maze)
 
     
-TODO:
-    - implement flexible maze size
-    - implement maze file selection    
-
-    - implement DFS agent
+TODO:    
+    - implement version with costs per action
     - implement exception handling
     - document all classes and methods
 
-BUGS:
-    - AI agent keeps on running after restart dialogue anwered with no (combine with new restart options!)
 """
 
 
