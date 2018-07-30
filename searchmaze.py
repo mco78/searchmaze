@@ -19,7 +19,6 @@ TODO:
 
 BUGS:
     - AI agent keeps on running after restart dialogue anwered with no (combine with new restart options!)
-    - radom maze doesn't work anymore -> OS ERROR
 """
 
 
@@ -144,7 +143,7 @@ class Application(tk.Frame):
     """
     def start(self):
         if self.maze_type == 3: #Could be needed to update after more mazes added!
-            self.maze = Maze(self.width, self.height)
+            self.maze = Maze(None, self.width, self.height)
         else:
             self.maze = Maze(self.maze_file)
         
