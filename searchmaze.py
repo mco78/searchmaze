@@ -68,9 +68,7 @@ class Application(tk.Frame):
 
         agents = [
                  ("manual", 1),
-                 ("go right", 2),
-                 ("random", 3),
-                 ("BFS", 4)
+                 ("BFS-Agent", 2)
                  ]
         agent_option = tk.IntVar()
         agent_option.set(1)
@@ -235,10 +233,6 @@ class Application(tk.Frame):
     """
     def create_AI_agent(self):
         if self.agent_type == 2:
-            self.agent = GoRightAgent()
-        elif self.agent_type == 3:
-            self.agent = RandomAgent()
-        elif self.agent_type == 4:
             self.agent = BFSAgent(self)
         else:
             print("agent type not available...")
