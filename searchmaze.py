@@ -10,8 +10,6 @@ Contributers:
 
     
 TODO:
-
-    - redesign status row: thinking steps and moving steps
     - implement flexible maze size
     - implement maze file selection    
 
@@ -27,14 +25,15 @@ BUGS:
 from functools import reduce
 import tkinter as tk
 from tkinter import messagebox
-import sys, random
+import sys, random, time
 from math import floor
 
 
 from agents import *
 
 
-AI_MOVEMENT_SPEED = 150
+AI_THINK_SPEED = 20 #the smaller the faster
+FACTOR_MOVEMENT_SPEED = 80 #factor by which movement is slower than thinking
 
 """
 MAIN CODE
@@ -49,11 +48,11 @@ class Application(tk.Frame):
         self.height = height
         self.size = size
         
-        root.geometry("520x340+400+400")
+        root.geometry("1040x680+200+200")
         
-        self.options_frame = tk.Frame(self, width=150, height=300)
-        self.options_frame.grid(row = 0, column = 0)
-        self.game_frame = tk.Frame(self, bg = "white", width=300, height=300)
+        self.options_frame = tk.Frame(self, width=300, height=600)
+        self.options_frame.grid(row = 0, column = 0, sticky="N")
+        self.game_frame = tk.Frame(self, bg = "white", width=600, height=600)
         self.game_frame.grid(row = 0, column = 1)
     
         self.get_options()
@@ -71,20 +70,23 @@ class Application(tk.Frame):
                  ("BFS-Agent", 2)
                  ]
         agent_option = tk.IntVar()
-        agent_option.set(1)
+        agent_option.set(2)
         
         mazes = [
-                ("Maze 1", 1),
-                ("Maze 2", 2),
-                ("random", 3)
+                ("Small Maze 1", 1),
+                ("Small Maze 2", 2),
+                ("Small Random", 3),
+                ("Big Maze 1", 4),
+                ("Big Maze 2", 5),
+                ("Big Random", 6)
                 ]
         maze_option = tk.IntVar()
-        maze_option.set(2)
+        maze_option.set(1)
         
         agent_label = tk.Label(self.options_frame, 
                                text="Choose the type of agent:",
                                padx = 20)
-        agent_label.grid(row=0)
+        agent_label.grid(row=0, sticky="N")
         
         r = 0
         self.radio_buttons = []
@@ -101,7 +103,7 @@ class Application(tk.Frame):
         tk.Label(self.options_frame,
                  text="Choose a maze:",
                  padx = 20
-                 ).grid(row=r+1)
+                 ).grid(row=r+1, sticky="N")
         r = r + 1 #skip one row for label
         for txt, val in mazes:
             r += 1
@@ -121,7 +123,7 @@ class Application(tk.Frame):
                                                       agent_option.get(), 
                                                       maze_option.get())
                   )
-        self.start_button.grid(row=r+1)
+        self.start_button.grid(row=r+1, sticky="N")
     
     def clear_options(self, options_frame, agent_option, maze_option):
         """
@@ -133,6 +135,10 @@ class Application(tk.Frame):
             self.maze_file = "maze1.maze"
         if self.maze_type == 2:
             self.maze_file = "maze2.maze"
+        if self.maze_type == 4:
+            self.maze_file = "bigmaze1.maze"
+        if self.maze_type == 5:
+            self.maze_file = "bigmaze2.maze"
         
         self.start_button['state'] = 'disabled'
         for button in self.radio_buttons:
@@ -143,8 +149,10 @@ class Application(tk.Frame):
     SET UP MAZE
     """
     def start(self):
-        if self.maze_type == 3: #Could be needed to update after more mazes added!
+        if self.maze_type == 3:  #Could be needed to update after more mazes added!
             self.maze = Maze(None, self.width, self.height)
+        elif self.maze_type == 6:
+            self.maze = Maze(None, self.width*2, self.height*2)
         else:
             self.maze = Maze(self.maze_file)
         
@@ -240,7 +248,7 @@ class Application(tk.Frame):
                 
     def create_AI_loop(self):
         self.AI_move()
-        root.after(AI_MOVEMENT_SPEED, self.create_AI_loop)
+        root.after(AI_THINK_SPEED, self.create_AI_loop)
         
     def AI_move(self):
         action = self.agent.think(self)
@@ -249,6 +257,7 @@ class Application(tk.Frame):
             self.think_steps +=1
             self.status.config(text="Think Steps: %d, Moves: %d" % (self.think_steps, self.move_steps))
         else:
+            time.sleep((AI_THINK_SPEED * 0.0001) * FACTOR_MOVEMENT_SPEED) #movement speed is 4 times slower than "think speed"
             self.move_cell(action)
     
     """
@@ -381,10 +390,10 @@ class Maze(object):
                 board.append(row)
         # basic validation of file - could be handled with exceptions
         all_elements = reduce(lambda x,y :x+y, board)
-        if len(board) != 10 or len(board[1]) != 10:
-            print("ERORR: File dimensions do not fit!")
-            return None
-        elif max(all_elements) > 3 or min(all_elements) < 0:
+#        if len(board) != 10 or len(board[1]) != 10:
+#            print("ERORR: File dimensions do not fit!")
+#            return None
+        if max(all_elements) > 3 or min(all_elements) < 0:
             print("ERROR: File contains invalid characters")
             return None
         elif all_elements.count(2) != 1:
@@ -417,6 +426,3 @@ if __name__ == '__main__':
     app = Application(root, 10, 10, 30)
     app.master.title('Searchmaze')
     app.mainloop()
-    
-#    root.destroy()
-    

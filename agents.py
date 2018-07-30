@@ -74,7 +74,7 @@ class BFSAgent(Agent):
         if self.exit_found == False:
             current = self.next_to_eval[0]
             self.evaluated += 1
-            print("Evaluating %s" %str(current.position))
+#            print("Evaluating %s" %str(current.position))
             if current.position == game.maze.exit_cell:
                 self.exit_found = True
                 #translate path to plan for directions
