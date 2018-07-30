@@ -148,7 +148,8 @@ class Application(tk.Frame):
         else:
             self.maze = Maze(self.maze_file)
         
-        self.steps = 0
+        self.move_steps = 0
+        self.think_steps = 0
         self.create_widgets() 
         self.draw_maze()
         if self.agent_type == 1:
@@ -191,9 +192,9 @@ class Application(tk.Frame):
             self.canvas.move(self.cell, -self.size, 0)
         elif action == "r":
             self.canvas.move(self.cell, self.size, 0)
-        self.steps += 1
+        self.move_steps += 1
         self.canvas.update()
-        self.status.config(text="Moves: %d" % self.steps)
+        self.status.config(text="Think Steps: %d, Moves: %d" % (self.think_steps, self.move_steps))
         self.check_status()
     
     def draw_eval_dot(self, action):
@@ -245,6 +246,8 @@ class Application(tk.Frame):
         action = self.agent.think(self)
         if type(action) == tuple: #no actual move, just evaluating a position
             self.draw_eval_dot(action)
+            self.think_steps +=1
+            self.status.config(text="Think Steps: %d, Moves: %d" % (self.think_steps, self.move_steps))
         else:
             self.move_cell(action)
     
@@ -280,7 +283,8 @@ class Application(tk.Frame):
     """
     def check_status(self):
         if self.maze.exit_cell == self.get_cell_coords():
-            self.status.config(text="Finished in %d moves!" % self.steps)
+            self.status.config(text="Finished in %d moves with %d think steps!" 
+                               % (self.move_steps, self.think_steps))
             self.restart_dialogue()
     
     def restart_dialogue(self):
@@ -292,7 +296,7 @@ class Application(tk.Frame):
         self.canvas.unbind_all("<KeyPress-Left>")
         self.canvas.unbind_all("<KeyPress-Right>")
         
-        msg = "Finished in %d moves. Do you want to restart?" % self.steps
+        msg = "Finished in %d moves with %d think steps. Do you want to restart?" % (self.move_steps, self.think_steps)
         if messagebox.askyesno("Restart", msg):
             self.restart()
         else:
@@ -302,7 +306,8 @@ class Application(tk.Frame):
     def restart(self):
         self.canvas.destroy()
         self.status.destroy()
-        self.steps = 0
+        self.move_steps = 0
+        self.think_steps = 0
         self.agent = None
         self.maze = None
         self.agent_type = None
