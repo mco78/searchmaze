@@ -10,10 +10,12 @@ Contributers:
 
     
 TODO:
-    - implement DFS agent
+
+    - redesign status row: thinking steps and moving steps
     - implement flexible maze size
     - implement maze file selection    
-    - restart option with new option selection
+
+    - implement DFS agent
     - implement exception handling
     - document all classes and methods
 
@@ -25,8 +27,9 @@ BUGS:
 from functools import reduce
 import tkinter as tk
 from tkinter import messagebox
-import sys
+import sys, random
 from math import floor
+
 
 from agents import *
 
@@ -298,16 +301,21 @@ class Application(tk.Frame):
         msg = "Finished in %d moves. Do you want to restart?" % self.steps
         if messagebox.askyesno("Restart", msg):
             self.restart()
+        else:
+            self.destroy()
+            
     
     def restart(self):
         self.canvas.destroy()
         self.status.destroy()
         self.steps = 0
-        self.create_widgets() 
-        self.draw_maze()
-        self.create_events()
-
-
+        self.agent = None
+        self.maze = None
+        self.agent_type = None
+        self.maze_type = None
+        
+        self.get_options()
+        
 """
 MAZE CLASS
 """
@@ -398,7 +406,8 @@ class Maze(object):
                 x += 1
                 if pos == element:
                     return (x, y)
-    
+
+
 
 """
 MAIN FUNCTION
@@ -409,4 +418,6 @@ if __name__ == '__main__':
     app = Application(root, 10, 10, 30)
     app.master.title('Searchmaze')
     app.mainloop()
+    
+#    root.destroy()
     
