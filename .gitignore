@@ -1,0 +1,7 @@
+*.pyc
+*~
+__pycache__
+/newer_codebase
+/old_codebase
+/research
+.DS_Store
